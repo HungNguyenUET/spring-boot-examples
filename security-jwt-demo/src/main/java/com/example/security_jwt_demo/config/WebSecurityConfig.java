@@ -2,7 +2,7 @@ package com.example.security_jwt_demo.config;
 
 import com.example.security_jwt_demo.jwt.JwtAuthenticationFilter;
 import com.example.security_jwt_demo.user.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -12,9 +12,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class WebSecurityConfig {
     private static final String[] WHITE_LIST_URL = {
             "/api/login",
@@ -22,11 +22,8 @@ public class WebSecurityConfig {
             "/api/refresh-token"
     };
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final UserService userService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,20 +39,18 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("removal")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors() // Ngăn chặn request từ một domain khác
                 .and()
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(req -> {
-                    req.requestMatchers(WHITE_LIST_URL)
-                            .permitAll()
-                            .anyRequest()
-                            .authenticated();
-                });
+                .authorizeHttpRequests(req -> req.requestMatchers(WHITE_LIST_URL)
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated());
 
         http.addFilter(jwtAuthenticationFilter);
-
         return http.build();
     }
 }
